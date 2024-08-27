@@ -3,11 +3,12 @@
   lib,
   ...
 }: let
-  inherit (lib.options) mkOption literalExpression;
+  inherit (lib.options) mkOption mkEnableOption literalExpression;
   inherit (lib.strings) optionalString;
-  inherit (lib.types) enum bool str int;
+  inherit (lib.types) enum bool str int nullOr either;
   inherit (lib.nvim.dag) entryAfter;
-  inherit (lib.nvim.lua) toLuaObject;
+  inherit (lib.nvim.lua) toLuaObject mkLuaInline;
+  inherit (lib.nvim.types) luaInline;
 
   cfg = config.vim;
 in {
@@ -158,112 +159,159 @@ in {
       default = "sensitive";
       description = "Set the case sensitivity of search";
     };
+
+    undoFile = {
+      enable = mkEnableOption ''
+        undofile for Neovim.
+
+        ::: {.warning}
+        [{option}`vim.undoFile.path`](#opt-vim.undoFile.path) **must** be set to a valid
+        path for this option to have any effect.
+        :::
+      '';
+
+      path = mkOption {
+        type = nullOr (either str luaInline);
+        default = null;
+        example = "os.getenv('XDG_DATA_HOME') .. '/nvf/undo'";
+        description = ''
+          Path to the file in which undo history will be saved. Must
+          an absolute path in a world-writable directory such as
+          {file}`~/.local/share`.
+
+          ::: {.tip}
+          You can use use variable substitution as you normally would in Neovim to
+          pick directories that conform with XDG spec. **nvf**, by, default creates
+          {file}`$XDG_DATA_HOME/nvf` - which you may choose to use for storing
+          state such as the undofile.
+          :::
+        '';
+      };
+    };
   };
 
-  config.vim.luaConfigRC.basic = entryAfter ["globalsScript"] ''
-    -- Settings that are set for everything
-    vim.o.encoding = "utf-8"
-    vim.o.hidden = true
-    vim.opt.shortmess:append("c")
-    vim.o.expandtab = true
-    vim.o.mouse = ${toLuaObject cfg.mouseSupport}
-    vim.o.tabstop = ${toLuaObject cfg.tabWidth}
-    vim.o.shiftwidth = ${toLuaObject cfg.tabWidth}
-    vim.o.softtabstop = ${toLuaObject cfg.tabWidth}
-    vim.o.cmdheight = ${toLuaObject cfg.cmdHeight}
-    vim.o.updatetime = ${toLuaObject cfg.updateTime}
-    vim.o.tm = ${toLuaObject cfg.mapTimeout}
-    vim.o.cursorlineopt = ${toLuaObject cfg.cursorlineOpt}
-    vim.o.scrolloff = ${toLuaObject cfg.scrollOffset}
-    vim.g.mapleader = ${toLuaObject cfg.leaderKey}
-    vim.g.maplocalleader = ${toLuaObject cfg.leaderKey}
+  config = {
+    vim.luaConfigRC.basic = entryAfter ["globalsScript"] ''
+      -- Settings that are set for everything
+      vim.o.encoding = "utf-8"
+      vim.o.hidden = true
+      vim.opt.shortmess:append("c")
+      vim.o.expandtab = true
+      vim.o.mouse = ${toLuaObject cfg.mouseSupport}
+      vim.o.tabstop = ${toLuaObject cfg.tabWidth}
+      vim.o.shiftwidth = ${toLuaObject cfg.tabWidth}
+      vim.o.softtabstop = ${toLuaObject cfg.tabWidth}
+      vim.o.cmdheight = ${toLuaObject cfg.cmdHeight}
+      vim.o.updatetime = ${toLuaObject cfg.updateTime}
+      vim.o.tm = ${toLuaObject cfg.mapTimeout}
+      vim.o.cursorlineopt = ${toLuaObject cfg.cursorlineOpt}
+      vim.o.scrolloff = ${toLuaObject cfg.scrollOffset}
+      vim.g.mapleader = ${toLuaObject cfg.leaderKey}
+      vim.g.maplocalleader = ${toLuaObject cfg.leaderKey}
 
-    ${optionalString cfg.splitBelow ''
-      vim.o.splitbelow = true
-    ''}
+      ${optionalString cfg.undoFile.enable ''
+        vim.o.undofile = true
+        vim.o.undodir = ${toLuaObject cfg.undoFile.path}
+      ''}
 
-    ${optionalString cfg.splitRight ''
-      vim.o.splitright = true
-    ''}
+      ${optionalString cfg.splitBelow ''
+        vim.o.splitbelow = true
+      ''}
 
-    ${optionalString cfg.showSignColumn ''
-      vim.o.signcolumn = "yes"
-    ''}
+      ${optionalString cfg.splitRight ''
+        vim.o.splitright = true
+      ''}
 
-    ${optionalString cfg.autoIndent ''
-      vim.o.autoindent = true
-    ''}
+      ${optionalString cfg.showSignColumn ''
+        vim.o.signcolumn = "yes"
+      ''}
 
-    ${optionalString cfg.preventJunkFiles ''
-      vim.o.swapfile = false
-      vim.o.backup = false
-      vim.o.writebackup = false
-    ''}
+      ${optionalString cfg.autoIndent ''
+        vim.o.autoindent = true
+      ''}
 
-    ${optionalString (cfg.bell == "none") ''
-      vim.o.errorbells = false
-      vim.o.visualbell = false
-    ''}
+      ${optionalString cfg.preventJunkFiles ''
+        vim.o.swapfile = false
+        vim.o.backup = false
+        vim.o.writebackup = false
+      ''}
 
-    ${optionalString (cfg.bell == "on") ''
-      vim.o.visualbell = false
-    ''}
+      ${optionalString (cfg.bell == "none") ''
+        vim.o.errorbells = false
+        vim.o.visualbell = false
+      ''}
 
-    ${optionalString (cfg.bell == "visual") ''
-      vim.o.errorbells = false
-    ''}
+      ${optionalString (cfg.bell == "on") ''
+        vim.o.visualbell = false
+      ''}
 
-    ${optionalString (cfg.lineNumberMode == "relative") ''
-      vim.o.relativenumber = true
-    ''}
+      ${optionalString (cfg.bell == "visual") ''
+        vim.o.errorbells = false
+      ''}
 
-    ${optionalString (cfg.lineNumberMode == "number") ''
-      vim.o.number = true
-    ''}
+      ${optionalString (cfg.lineNumberMode == "relative") ''
+        vim.o.relativenumber = true
+      ''}
 
-    ${optionalString (cfg.lineNumberMode == "relNumber") ''
-      vim.o.number = true
-      vim.o.relativenumber = true
-    ''}
+      ${optionalString (cfg.lineNumberMode == "number") ''
+        vim.o.number = true
+      ''}
 
-    ${optionalString cfg.useSystemClipboard ''
-      vim.opt.clipboard:append("unnamedplus")
-    ''}
+      ${optionalString (cfg.lineNumberMode == "relNumber") ''
+        vim.o.number = true
+        vim.o.relativenumber = true
+      ''}
 
-    ${optionalString cfg.syntaxHighlighting ''
-      vim.cmd("syntax on")
-    ''}
+      ${optionalString cfg.useSystemClipboard ''
+        vim.opt.clipboard:append("unnamedplus")
+      ''}
 
-    ${optionalString (!cfg.wordWrap) ''
-      vim.o.wrap = false
-    ''}
+      ${optionalString cfg.syntaxHighlighting ''
+        vim.cmd("syntax on")
+      ''}
 
-    ${optionalString cfg.hideSearchHighlight ''
-      vim.o.hlsearch = false
-      vim.o.incsearch = true
-    ''}
+      ${optionalString (!cfg.wordWrap) ''
+        vim.o.wrap = false
+      ''}
 
-    ${optionalString cfg.colourTerm ''
-      vim.o.termguicolors = true
-    ''}
+      ${optionalString cfg.hideSearchHighlight ''
+        vim.o.hlsearch = false
+        vim.o.incsearch = true
+      ''}
 
-    ${optionalString (!cfg.enableEditorconfig) ''
-      vim.g.editorconfig = false
-    ''}
+      ${optionalString cfg.colourTerm ''
+        vim.o.termguicolors = true
+      ''}
 
-    ${optionalString (cfg.searchCase == "ignore") ''
-      vim.o.smartcase = false
-      vim.o.ignorecase = true
-    ''}
+      ${optionalString (!cfg.enableEditorconfig) ''
+        vim.g.editorconfig = false
+      ''}
 
-    ${optionalString (cfg.searchCase == "smart") ''
-      vim.o.smartcase = true
-      vim.o.ignorecase = true
-    ''}
+      ${optionalString (cfg.searchCase == "ignore") ''
+        vim.o.smartcase = false
+        vim.o.ignorecase = true
+      ''}
 
-    ${optionalString (cfg.searchCase == "sensitive") ''
-      vim.o.smartcase = false
-      vim.o.ignorecase = false
-    ''}
-  '';
+      ${optionalString (cfg.searchCase == "smart") ''
+        vim.o.smartcase = true
+        vim.o.ignorecase = true
+      ''}
+
+      ${optionalString (cfg.searchCase == "sensitive") ''
+        vim.o.smartcase = false
+        vim.o.ignorecase = false
+      ''}
+    '';
+
+    assertions = [
+      {
+        assertion = cfg.undoFile.enable -> cfg.undoFile.path != null;
+        message = ''
+          `vim.undoFile.enable` is set to true, but `vim.undoFile.path` is not set
+          as a valid path. Please set `vim.undoFile.path` to a valid path, or disable
+          the undoFile feature.
+        '';
+      }
+    ];
+  };
 }
