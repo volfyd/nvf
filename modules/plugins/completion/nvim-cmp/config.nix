@@ -221,7 +221,7 @@ in {
         },
 
         completion = {
-          completeopt = 'menu,menuone,noinsert',
+          completeopt = 'menu,menuone,noinsert,noselect',
           ${optionalString (!cfg.alwaysComplete) "autocomplete = false"}
         },
 
