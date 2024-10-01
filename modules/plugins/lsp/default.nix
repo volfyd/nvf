@@ -10,10 +10,10 @@
 
     # lsp plugins
     ./lspsaga
-    ./nvim-code-action-menu
     ./trouble
     ./lsp-signature
     ./lightbulb
+    ./otter
     ./lspkind
     ./lsplines
     ./nvim-docs-view

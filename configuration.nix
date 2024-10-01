@@ -17,9 +17,9 @@ isMaximal: {
       lspkind.enable = false;
       lightbulb.enable = true;
       lspsaga.enable = false;
-      nvimCodeActionMenu.enable = isMaximal;
       trouble.enable = true;
       lspSignature.enable = true;
+      otter-nvim.enable = isMaximal;
       lsplines.enable = isMaximal;
       nvim-docs-view.enable = isMaximal;
     };
@@ -60,6 +60,7 @@ isMaximal: {
       python.enable = isMaximal;
       dart.enable = isMaximal;
       bash.enable = isMaximal;
+      r.enable = isMaximal;
       tailwind.enable = isMaximal;
       typst.enable = isMaximal;
       clang = {
@@ -155,7 +156,7 @@ isMaximal: {
     };
 
     utility = {
-      ccc.enable = isMaximal;
+      ccc.enable = false;
       vim-wakatime.enable = false;
       icon-picker.enable = isMaximal;
       surround.enable = isMaximal;
@@ -204,6 +205,7 @@ isMaximal: {
           go = ["90" "130"];
         };
       };
+      fastaction.enable = true;
     };
 
     assistant = {
