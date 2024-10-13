@@ -80,13 +80,17 @@ everyone.
 
 [ocaml-lsp]: https://github.com/ocaml/ocaml-lsp
 [new-file-template.nvim]: https://github.com/otavioschwanck/new-file-template.nvim
+[neo-tree.nvim]: https://github.com/nvim-neo-tree/neo-tree.nvim
 
 - Add [ocaml-lsp] support
 
 - Fix "Emac" typo
 
 - Add [new-file-template.nvim] to automatically fill new file contents using
-  templates.
+  templates
+
+- Make [neo-tree.nvim] display file icons properly by enabling
+  `visuals.nvimWebDevicons`
 
 [diniamo](https://github.com/diniamo):
 
@@ -203,8 +207,12 @@ everyone.
   - Fixed `project-nvim` command and keybinding
   - Added default ikeybind/command for `Telescope resume` (`<leader>fr`)
 
-[Soliprem](https://github.com/Soliprem)
+[Soliprem](https://github.com/Soliprem):
 
 - Add LSP and Treesitter support for R under `vim.languages.R`.
 - Add Otter support under `vim.lsp.otter` and an assert to prevent conflict with
   ccc
+
+[Bloxx12](https://github.com/Bloxx12):
+
+- Fix internal breakage in `elixir-tools` setup.
